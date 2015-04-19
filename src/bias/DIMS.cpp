@@ -24,6 +24,7 @@
 #include "ActionRegister.h"
 #include <ctime>
 #include <cmath>
+#include <random>
 
 namespace PLMD{
 namespace bias{
@@ -72,7 +73,7 @@ to(getNumberOfArguments(),0.0),
 curr(getNumberOfArguments(),-1.0),
 kappa(getNumberOfArguments(),0.0),
 phi(getNumberOfArguments(),1.0e-4),
-seed(getNumberOfArguments(),time(0)),
+seed(getNumberOfArguments(),time(0))
 {
   // Note : parseVector will check that number of arguments is correct
   parseVector("TO",to);
@@ -97,18 +98,17 @@ seed(getNumberOfArguments(),time(0)),
     addComponent(str_curr); componentIsNotPeriodic(str_curr);
     if(curr[i]!=-1.0) getPntrToComponent(str_curr)->set(curr[i]);
   }
-  for(unsigned i=0;i<getNumberOfArguments();i++) {random[i].setSeed(-seed[i]);}
   addComponent("accepted"); componentIsNotPeriodic("accepted");
 }
 
 void DIMS::calculate()
 {
   bool accepted=true;
-  double cv
-  double cv2
-  double k
-  double f 
-  float prob
+  double cv;
+  double cv2;
+  double k;
+  double f;
+  float prob;
 
   for(unsigned i=0;i<getNumberOfArguments();++i)
   {
@@ -129,15 +129,15 @@ void DIMS::calculate()
     {
       // the probability of backtracking scales inverse exponentially with the
       // amount of backtracking
-      prob = std::exp(-1 * std::pow((cv2 - curr[i])/phi[i], 2))
-      std::default_random_engine generator;
-      std::bernoulli_distribution dist(prob)
+      prob = std::exp(-1 * std::pow((cv2 - curr[i])/phi[i], 2));
+      std::random_device generator(seed[i]);
+      std::bernoulli_distribution dist(prob);
       
       // if the backtrack is accepted...
       if dist(generator)
       {
         curr[i] = cv2; 
-        accepted = accepted && true
+        accepted = accepted && true;
       }
       // if the backtrack is rejected, apply a harmonic restraining force to
       // the collective variable
@@ -147,7 +147,8 @@ void DIMS::calculate()
         // gives us our force on the CV
         f = -2.*k*(cv2-curr[i])*cv;
         setOutputForce(i,f);
-        accepted = accepted && false
+        accepted = accepted && false;
+      }
     }
     std::string str_curr=getPntrToArgument(i)->getName()+"_curr";
     getPntrToComponent(str_curr)->set(curr[i]);
